@@ -5,17 +5,10 @@ const list = document.getElementById('list');
 const form = document.getElementById('form');
 const text = document.getElementById('text');
 const amount = document.getElementById('amount');
+const category = document.getElementById('category'); // New category input
+const categoryFilter = document.getElementById('category-filter'); // Category filter input
 
-// const dummyTransactions = [
-//   { id: 1, text: 'Flower', amount: -20 },
-//   { id: 2, text: 'Salary', amount: 300 },
-//   { id: 3, text: 'Book', amount: -10 },
-//   { id: 4, text: 'Camera', amount: 150 }
-// ];
-
-const localStorageTransactions = JSON.parse(
-  localStorage.getItem('transactions')
-);
+const localStorageTransactions = JSON.parse(localStorage.getItem('transactions'));
 
 let transactions =
   localStorage.getItem('transactions') !== null ? localStorageTransactions : [];
@@ -30,7 +23,8 @@ function addTransaction(e) {
     const transaction = {
       id: generateID(),
       text: text.value,
-      amount: +amount.value
+      amount: +amount.value,
+      category: category.value // Include category
     };
 
     transactions.push(transaction);
@@ -43,6 +37,7 @@ function addTransaction(e) {
 
     text.value = '';
     amount.value = '';
+    category.value = 'Food'; // Reset category to default
   }
 }
 
@@ -53,26 +48,27 @@ function generateID() {
 
 // Add transactions to DOM list
 function addTransactionDOM(transaction) {
-  // Get sign
+  // Get sign for amount
   const sign = transaction.amount < 0 ? '-' : '+';
 
   const item = document.createElement('li');
 
-  // Add class based on value
+  // Add class based on transaction amount
   item.classList.add(transaction.amount < 0 ? 'minus' : 'plus');
 
+  // Display transaction details, including category
   item.innerHTML = `
-    ${transaction.text} <span>${sign}${Math.abs(
-    transaction.amount
-  )}</span> <button class="delete-btn" onclick="removeTransaction(${
-    transaction.id
-  })">x</button>
+    ${transaction.text} <span>${sign}${Math.abs(transaction.amount)}</span> 
+    <span class="category">${transaction.category}</span> 
+    <button class="delete-btn" onclick="removeTransaction(${transaction.id})">
+      <i class="fa-solid fa-trash"></i>
+    </button>
   `;
-
+  
   list.appendChild(item);
 }
 
-// Update the balance, income and expense
+// Update the balance, income, and expense
 function updateValues() {
   const amounts = transactions.map(transaction => transaction.amount);
 
@@ -115,6 +111,22 @@ function init() {
   updateValues();
 }
 
+// Filter transactions based on selected category
+function filterTransactions() {
+  const selectedCategory = categoryFilter.value;
+  list.innerHTML = '';
+
+  let filteredTransactions = transactions;
+
+  if (selectedCategory !== 'All') {
+    filteredTransactions = transactions.filter(transaction => transaction.category === selectedCategory);
+  }
+
+  filteredTransactions.forEach(addTransactionDOM);
+}
+
 init();
 
+// Event listeners
 form.addEventListener('submit', addTransaction);
+categoryFilter.addEventListener('change', filterTransactions);
